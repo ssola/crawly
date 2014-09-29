@@ -1,0 +1,21 @@
+{
+    "name": "ssola/crawly",
+    "description": "Simple web crawler library",
+    "require": {
+        "phpunit/phpunit": "~4.2",
+        "symfony/dom-crawler": "~2.1",
+        "guzzlehttp/guzzle": "~4.0",
+        "mnapoli/php-di": "~4.0"
+    },
+    "authors": [
+        {
+            "name": "ssola",
+            "email": "me@sergiosola.com"
+        }
+    ],
+    "autoload" : {
+        "psr-0": {
+            "Crawly" : "src/"
+        }
+    }
+}
