@@ -2,6 +2,9 @@
 
 interface Contract
 {
+    const SUCCESS_REQUEST = 200;
+
     public function request($url);
-    public function getContents();
+    public function getContent();
+    public function getSize();
 }
