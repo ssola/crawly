@@ -5,7 +5,8 @@
         "phpunit/phpunit": "~4.2",
         "symfony/dom-crawler": "~2.1",
         "guzzlehttp/guzzle": "~4.0",
-        "mnapoli/php-di": "~4.0"
+        "mnapoli/php-di": "~4.0",
+        "symfony/css-selector": "2.6.*@dev"
     },
     "authors": [
         {
