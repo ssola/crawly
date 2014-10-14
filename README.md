@@ -83,4 +83,6 @@ class MyOwnDiscover implements Discoverable
 
 ## Limiters
 
+Limiters are used to limit the crawler actions. For instance, we can limit how many links can been crawled or which is the maximum amout of bandwitdth to use.
+
 ## Extractors
