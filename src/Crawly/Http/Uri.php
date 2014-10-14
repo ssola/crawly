@@ -4,7 +4,6 @@ class Uri
 {
     private $url;
     private $parts;
-    private $basePath;
 
     public function __construct($url, $host = null)
     {

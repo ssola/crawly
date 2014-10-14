@@ -1,50 +1,132 @@
 <?php namespace Crawly;
 
+use Crawly\Extractor\Extractor;
+use Crawly\Http\Client;
+use Crawly\Archive\Url as UrlArchive;
+use Crawly\Archive\Visited as UrlVisitedArchive;
+use Crawly\Discover\Discoverable as Discoverable;
+use Crawly\Limiter\Limitable;
+use Crawly\Discover\Discover;
+use Crawly\Limiter\Limiter;
+
+/**
+ * Class Crawly
+ * @package Crawly
+ */
 class Crawly
 {
+    /**
+     * Http client that handle all the requests
+     *
+     * @var Http\Client
+     */
     private $client;
-    private $limiter;
-    private $seed;
-    private $urlQueue;
-    private $discovers;
-    private $seedHost;
-    private $visited;
-    private $extractors;
 
-    // DI for testing
+    /**
+     * Limiter handler
+     *
+     * @var array
+     */
+    private $limiter;
+
+    /**
+     * Queue of pending urls to visit
+     *
+     * @var Archive\Url
+     */
+    private $urlQueue;
+
+    /**
+     * Seed url
+     *
+     * @var
+     */
+    private $seed;
+
+    /**
+     * Seed host
+     *
+     * @var
+     */
+    private $seedHost;
+
+    /**
+     * List of already visited urls
+     * @var Archive\Visited
+     */
+    private $visited;
+
+    /**
+     * Extractor collection
+     *
+     * @var array
+     */
+    private $extractor;
+
+    /**
+     * Main constructor
+     *
+     * @param Http\Client $client
+     * @param Archive\Url $urlQueue
+     * @param Archive\Visited $visited
+     */
     public function __construct(
-        Http\Contract $client,
-        Limiters\Contracts\Collection $limiter,
-        Queues\Url $urlQueue,
-        Queues\Visited $visited
+        Client $client,
+        UrlArchive $urlQueue,
+        UrlVisitedArchive $visited
     )
     {
         $this->client = $client;
-        $this->limiter = $limiter;
         $this->urlQueue = $urlQueue;
         $this->visited = $visited;
-        $this->extractors = [];
+
+        $this->discover = new Discover($this);
+        $this->limiter = new Limiter();
+        $this->extractor = new Extractor();
     }
 
+    /**
+     * Run the crawler
+     */
     public function run()
     {
+        // TODO refactor this
         while(!$this->urlQueue->isEmpty()) {
             foreach($this->urlQueue->getItems() as $key => $url) {
                 echo sprintf("Analyzing %s\r\n", $url->toString());
-                $this->urlQueue->delete($key);
+
+                // retrieve page data
                 $response = $this->client->request($url->toString());
+
+                // add / delete from lists
+                $this->urlQueue->delete($key);
                 $this->visited->add($url->toString());
 
+                // no data
+                if($response == null) {
+                    // log this!
+                    continue;
+                }
+
                 // find more urls to parse
-                $this->discover($response);
+                $this->discover->process($response);
 
                 // extract data
-                $this->extract($response);
+                $this->extractor->extract($response);
+
+                // set limiters
+                $this->limiter->check($response);
+
                 echo sprintf("Queue size: %d\r\n", $this->urlQueue->count());
             }
         }
     }
 
+    /**
+     * Set seed url
+     *
+     * @param $url
+     */
     public function setSeed($url)
     {
         $this->seed = new Http\Uri($url);
@@ -52,42 +134,63 @@ class Crawly
         $this->urlQueue->push($this->seed);
     }
 
-    public function extract(\GuzzleHttp\Message\Response $response)
+    /**
+     * Return URL host
+     *
+     * @return mixed
+     */
+    public function getHost()
     {
-        foreach($this->extractors as $extractor) {
-            call_user_func($extractor, $response);
-        }
+        return $this->seedHost;
     }
 
+    /**
+     * Get all visited urls
+     *
+     * @return Archive\Visited
+     */
+    public function getVisitedUrl()
+    {
+        return $this->visited;
+    }
+
+    /**
+     * Get url queue
+     *
+     * @return UrlArchive
+     */
+    public function getUrlQueue()
+    {
+        return $this->urlQueue;
+    }
+
+    /**
+     * Include new extractor
+     *
+     * @param callable $extractor
+     */
     public function attachExtractor(\Closure $extractor)
     {
-        $this->extractors[] = $extractor;
+        $this->extractor->add ($extractor);
     }
 
-    public function attachDiscover(Discovers\Contract $discover)
+    /**
+     * Include new discover
+     *
+     * @param Discoverable $discover
+     */
+    public function attachDiscover(Discoverable $discover)
     {
-        $this->discovers[] = $discover;
+        $this->discover->add ($discover);
     }
 
-    public function discover(\GuzzleHttp\Message\Response $response)
+    /**
+     * Include new limiter
+     *
+     * @param Limitable $limiter
+     */
+    public function attachLimiter(Limitable $limiter)
     {
-        foreach($this->discovers as $discover) {
-            $discover->find($response, $this->urlQueue, $this->visited, $this->seedHost);
-        }
-    }
-
-    public function attachLimiter(Limiters\Contract $limiter)
-    {
-        $this->limiter->attach($limiter);
-    }
-
-    public static function factory ()
-    {
-        return new Crawly(
-            new Http\Guzzle(),
-            new Limiters\Collection(),
-            new Queues\Url(),
-            new Queues\Visited()
-        );
+        $this->limiter->add ($limiter);
     }
 }

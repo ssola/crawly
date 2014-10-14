@@ -1,15 +1,16 @@
 <?php namespace Crawly\Http;
 
 use GuzzleHttp\Message\Response as Response;
+use \GuzzleHttp\Client as GuzzleClient;
 
-class Guzzle implements Contract
+class Guzzle implements Client
 {
     private $client = null;
     private $response = null;
 
     public function __construct()
     {
-        $this->client = new \GuzzleHttp\Client();
+        $this->client = new GuzzleClient();
     }
 
     public function request($url)
@@ -20,11 +21,11 @@ class Guzzle implements Contract
             throw new \RuntimeException("Response is not instance of Response");
         }
 
-        if($this->response->getStatusCode() == Contract::SUCCESS_REQUEST) {
+        if($this->response->getStatusCode() == Client::SUCCESS_REQUEST) {
             return $this->response;
         }
 
-        return null;
+        return false;
     }
 
     public function getContent()
