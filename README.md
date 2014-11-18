@@ -1,4 +1,4 @@
-Crawly
+Crawly [![Build Status](https://scrutinizer-ci.com/g/ssola/crawly/badges/build.png?b=master)](https://scrutinizer-ci.com/g/ssola/crawly/build-status/master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ssola/crawly/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ssola/crawly/?branch=master)
 ======
 
 Crawly is a simple web crawler able to extract and follow links depending on the discovers.
