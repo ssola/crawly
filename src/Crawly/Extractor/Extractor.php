@@ -14,15 +14,22 @@ use Closure;
 class Extractor
 {
     private $extractors = [];
+    private $crawler;
 
-    public function __construct() {}
+    /**
+     * @param $crawler
+     */
+    public function __construct($crawler)
+    {
+        $this->crawler = $crawler;
+    }
 
     public function add (Closure $callback)
     {
-        $this->extractors = $callback;
+        $this->extractors[] = $callback;
     }
 
-    public function extract (Response $response)
+    public function extract ($response)
     {
         foreach($this->extractors as $extractor) {
             call_user_func($extractor, $response);

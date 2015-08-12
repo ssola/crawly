@@ -23,7 +23,7 @@ class Visited
         return count($this->visited);
     }
 
-    public function add($url) 
+    public function add($url)
     {
         if($this->seen($url)) {
             return false;

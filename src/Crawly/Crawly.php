@@ -82,7 +82,7 @@ class Crawly
 
         $this->discover = new Discover($this);
         $this->limiter = new Limiter();
-        $this->extractor = new Extractor();
+        $this->extractor = new Extractor($this);
     }
 
     /**
@@ -108,11 +108,14 @@ class Crawly
                     continue;
                 }
 
-                // find more urls to parse
-                $this->discover->process($response);
+                $response = $response->getBody()->getContents();
 
                 // extract data
                 $this->extractor->extract($response);
+
+                // find more urls to parse
+                $this->discover->process($response);
+
 
                 // set limiters
                 $this->limiter->check($response);
@@ -179,9 +182,9 @@ class Crawly
      *
      * @param Discoverable $discover
      */
-    public function attachDiscover(Discoverable $discover)
+    public function attachDiscover(Discoverable $discover, \Closure $excluder = null)
     {
-        $this->discover->add ($discover);
+        $this->discover->add ($discover, $excluder);
     }
 
     /**

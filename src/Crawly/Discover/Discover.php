@@ -20,15 +20,18 @@ class Discover
         $this->crawler = $crawler;
     }
 
-    public function add (Discoverable $discover)
+    public function add (Discoverable $discover, \Closure $excluder = null)
     {
-        $this->discovers[] = $discover;
+        $this->discovers[] = [
+            'discover' => $discover,
+            'excluder' => $excluder
+        ];
     }
 
-    public function process (Response $response)
+    public function process ($response)
     {
         foreach($this->discovers as $discover) {
-            $discover->find($this->crawler, $response);
+            $discover['discover']->find($this->crawler, $response, $discover['excluder']);
         }
     }
 } 
